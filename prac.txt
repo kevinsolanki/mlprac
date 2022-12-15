@@ -1,0 +1,592 @@
+Practical 1
+Aim: Implement and demonstrate the FIND-S algorithm for finding the most specific hypothesis based on a given set of training data samples. Read the training data from a .CSV file.
+CSV File:
+ 
+Code: 
+import csv
+a = []
+with open('enjoysport.csv', 'r') as csvfile:
+    next(csvfile)
+    for row in csv.reader(csvfile):
+        a.append(row)
+    print(a)
+
+print("\nThe total number of training instances are : ",len(a))
+
+num_attribute = len(a[0])-1
+
+print("\nThe initial hypothesis is : ")
+hypothesis = ['0']*num_attribute
+print(hypothesis)
+
+for i in range(0, len(a)):
+    if a[i][num_attribute] == 'yes':
+        print ("\nInstance ", i+1, "is", a[i], " and is Positive Instance")
+        for j in range(0, num_attribute):
+            if hypothesis[j] == '0' or hypothesis[j] == a[i][j]:
+                hypothesis[j] = a[i][j]
+            else:
+                hypothesis[j] = '?'
+        print("The hypothesis for the training instance", i+1, " is: " , hypothesis, "\n")
+
+    if a[i][num_attribute] == 'no':
+        print ("\nInstance ", i+1, "is", a[i], " and is Negative Instance Hence Ignored")
+        print("The hypothesis for the training instance", i+1, " is: " , hypothesis, "\n")
+
+print("\nThe Maximally specific hypothesis for the training instance is ", hypothesis)
+Output:
+ 
+ 
+Practical 2
+Aim: For a given set of training data examples stored in a .CSV file, implement and demonstrate the Candidate-Elimination algorithm to output a description of the set of all hypotheses consistent with the training examples.
+CSV File:
+ 
+Code: 
+import numpy as np
+import pandas as pd
+
+# Loading Data from a CSV File
+data = pd.DataFrame(data=pd.read_csv('trainingdata.csv'))
+print(data)
+
+# Separating concept features from Target
+concepts = np.array(data.iloc[:,0:-1])
+print(concepts)
+
+# Isolating target into a separate DataFrame
+# copying last column to target array
+target = np.array(data.iloc[:,-1])
+print(target)
+
+def learn(concepts, target):
+ 
+    '''
+    learn() function implements the learning method of the Candidate elimination algorithm.
+    Arguments:
+        concepts - a data frame with all the features
+        target - a data frame with corresponding output values
+    '''
+
+    # Initialise S0 with the first instance from concepts
+    # .copy() makes sure a new list is created instead of just pointing to the same memory location
+    specific_h = concepts[0].copy()
+    print("\nInitialization of specific_h and general_h")
+    print(specific_h)
+    #h=["#" for i in range(0,5)]
+    #print(h)
+
+    general_h = [["?" for i in range(len(specific_h))] for i in range(len(specific_h))]
+    print(general_h)
+    # The learning iterations
+    for i, h in enumerate(concepts):
+
+        # Checking if the hypothesis has a positive target
+        if target[i] == "Yes":
+            for x in range(len(specific_h)):
+
+                # Change values in S & G only if values change
+                if h[x] != specific_h[x]:
+                    specific_h[x] = '?'
+                    general_h[x][x] = '?'
+
+        # Checking if the hypothesis has a positive target
+        if target[i] == "No":
+            for x in range(len(specific_h)):
+                # For negative hyposthesis change values only  in G
+                if h[x] != specific_h[x]:
+                    general_h[x][x] = specific_h[x]
+                else:
+                    general_h[x][x] = '?'
+
+        print("\nSteps of Candidate Elimination Algorithm",i+1)
+        print(specific_h)
+        print(general_h)
+ 
+    # find indices where we have empty rows, meaning those that are unchanged
+    indices = [i for i, val in enumerate(general_h) if val == ['?', '?', '?', '?', '?', '?']]
+    for i in indices:
+        # remove those rows from general_h
+        general_h.remove(['?', '?', '?', '?', '?', '?'])
+    # Return final values
+    return specific_h, general_h
+
+s_final, g_final = learn(concepts, target)
+print("\nFinal Specific_h:", s_final, sep="\n")
+print("\nFinal General_h:", g_final, sep="\n")
+
+Output:
+ 
+ 
+Practical 3
+Aim: Write a program to demonstrate the working of the decision tree based ID3 algorithm. Use an appropriate data set for building the decision tree and apply this knowledge to classify a new sample.
+CSV File:
+ 
+Code: 
+import pandas as pd
+from collections import Counter
+from pandas import DataFrame 
+import math 
+
+df_tennis = pd.read_csv('3-dataset.csv')
+
+print(df_tennis) 
+
+def entropy(probs):
+    return sum( [-prob*math.log(prob, 2) for prob in probs] )
+
+def entropy_of_list(a_list):
+    cnt = Counter(x for x in a_list) #Count the positive and negative ex
+    num_instances = len(a_list) 
+
+    probs = [x / num_instances for x in cnt.values()] 
+    return entropy(probs)
+
+total_entropy = entropy_of_list(df_tennis['PT'])
+
+print("\n Total Entropy of PlayTennis Data Set:",total_entropy)
+#Defining Information Gain Function 
+
+def information_gain(df, split_attribute_name, target_attribute_name, trace=0):
+
+    print("Information Gain Calculation of ",split_attribute_name)
+
+    print("target_attribute_name",target_attribute_name)
+
+    df_split = df.groupby(split_attribute_name)
+
+    for name,group in df_split:
+        print("Name: ",name)
+
+        print("Group: ",group)
+
+    nobs = len(df.index) * 1.0
+    print("NOBS",nobs) 
+
+    df_agg_ent = df_split.agg({target_attribute_name : [entropy_of_list, lambda x: len(x)/nobs] })[target_attribute_name]
+
+    print("df_agg_ent",df_agg_ent)
+
+# Calculate Information Gain
+
+    avg_info = sum( df_agg_ent['Entropy'] * df_agg_ent['Prob1'] )
+
+    old_entropy = entropy_of_list(df[target_attribute_name])
+
+    return old_entropy - avg_info
+
+print('Info-gain for Outlook is :'+str(information_gain(df_tennis, 'Outlook', 'PT')),"\n")
+
+Output:
+ 
+ 
+Practical 4
+Aim: Build an Artificial Neural Network by implementing the Backpropagation algorithm and test the same using appropriate data sets.
+Code: 
+import numpy as np
+
+X = np.array(([2, 9], [1, 5], [3, 6]), dtype=float)
+y = np.array(([92], [86], [89]), dtype=float)
+X = X/np.amax(X,axis=0) #maximum of X array longitudinally
+y = y/100
+
+#Sigmoid Function
+def sigmoid (x):
+    return 1/(1 + np.exp(-x))
+
+#Derivative of Sigmoid Function
+def derivatives_sigmoid(x):
+    return x * (1 - x)
+
+#Variable initialization
+epoch=5 #Setting training iterations
+lr=0.1 #Setting learning rate
+
+inputlayer_neurons = 2 #number of features in data set
+hiddenlayer_neurons = 3 #number of hidden layers neurons
+output_neurons = 1 #number of neurons at output layer
+#weight and bias initialization
+
+wh=np.random.uniform(size=(inputlayer_neurons,hiddenlayer_neurons))
+bh=np.random.uniform(size=(1,hiddenlayer_neurons))
+wout=np.random.uniform(size=(hiddenlayer_neurons,output_neurons))
+bout=np.random.uniform(size=(1,output_neurons))
+
+#draws a random range of numbers uniformly of dim x*y
+for i in range(epoch):
+    #Forward Propogation
+    hinp1=np.dot(X,wh)
+    hinp=hinp1 + bh
+    hlayer_act = sigmoid(hinp)
+    outinp1=np.dot(hlayer_act,wout)
+    outinp= outinp1+bout
+    output = sigmoid(outinp)
+    
+    #Backpropagation
+    EO = y-output
+    outgrad = derivatives_sigmoid(output)
+    d_output = EO * outgrad
+    EH = d_output.dot(wout.T)
+    hiddengrad = derivatives_sigmoid(hlayer_act)#how much hidden layer wts contributed to error
+    d_hiddenlayer = EH * hiddengrad
+    
+    wout += hlayer_act.T.dot(d_output) *lr   # dotproduct of nextlayererror and currentlayerop
+    wh += X.T.dot(d_hiddenlayer) *lr
+print("Input: \n" + str(X)) 
+print("Actual Output: \n" + str(y))
+print("Predicted Output: \n" ,output)
+
+
+
+Output:
+ 
+ 
+Practical 5
+Aim: Write a program to implement the naïve Bayesian classifier for a sample training data set stored as a .CSV file. Compute the accuracy of the classifier, considering few test data sets.
+CSV File:
+ 
+Code: 
+import csv
+import random
+import math
+def loadcsv(filename):
+    lines = csv.reader(open(filename, "r"));
+    dataset = list(lines)
+    for i in range(len(dataset)):
+       #converting strings into numbers for processing
+        dataset[i] = [float(x) for x in dataset[i]]
+        
+    return dataset
+ 
+def splitdataset(dataset, splitratio):
+    #67% training size
+    trainsize = int(len(dataset) * splitratio);
+    trainset = []
+    copy = list(dataset);    
+    while len(trainset) < trainsize:
+#generate indices for the dataset list randomly to pick ele for training data
+        index = random.randrange(len(copy));       
+        trainset.append(copy.pop(index))    
+    return [trainset, copy]
+ 
+def separatebyclass(dataset):
+    separated = {} #dictionary of classes 1 and 0 
+#creates a dictionary of classes 1 and 0 where the values are 
+#the instances belonging to each class
+    for i in range(len(dataset)):
+        vector = dataset[i]
+        if (vector[-1] not in separated):
+            separated[vector[-1]] = []
+        separated[vector[-1]].append(vector)
+    return separated
+ 
+def mean(numbers):
+    return sum(numbers)/float(len(numbers))
+ 
+def stdev(numbers):
+    avg = mean(numbers)
+    variance = sum([pow(x-avg,2) for x in numbers])/float(len(numbers)-1)
+    return math.sqrt(variance)
+ 
+def summarize(dataset): #creates a dictionary of classes
+    summaries = [(mean(attribute), stdev(attribute)) for attribute in zip(*dataset)];
+    del summaries[-1] #excluding labels +ve or -ve
+    return summaries
+ 
+def summarizebyclass(dataset):
+    separated = separatebyclass(dataset); 
+    #print(separated)
+    summaries = {}
+    for classvalue, instances in separated.items(): 
+#for key,value in dic.items()
+#summaries is a dic of tuples(mean,std) for each class value        
+        summaries[classvalue] = summarize(instances) #summarize is used to cal to mean and std
+    return summaries
+ 
+def calculateprobability(x, mean, stdev):
+    exponent = math.exp(-(math.pow(x-mean,2)/(2*math.pow(stdev,2))))
+    return (1 / (math.sqrt(2*math.pi) * stdev)) * exponent
+ 
+def calculateclassprobabilities(summaries, inputvector):
+    probabilities = {} # probabilities contains the all prob of all class of test data
+    for classvalue, classsummaries in summaries.items():#class and attribute information as mean and sd
+        probabilities[classvalue] = 1
+        for i in range(len(classsummaries)):
+            mean, stdev = classsummaries[i] #take mean and sd of every attribute for class 0 and 1 seperaely
+            x = inputvector[i] #testvector's first attribute
+            probabilities[classvalue] *= calculateprobability(x, mean, stdev);#use normal dist
+    return probabilities
+            
+def predict(summaries, inputvector): #training and test data is passed
+    probabilities = calculateclassprobabilities(summaries, inputvector)
+    bestLabel, bestProb = None, -1
+    for classvalue, probability in probabilities.items():#assigns that class which has he highest prob
+        if bestLabel is None or probability > bestProb:
+            bestProb = probability
+            bestLabel = classvalue
+    return bestLabel
+ 
+def getpredictions(summaries, testset):
+    predictions = []
+    for i in range(len(testset)):
+        result = predict(summaries, testset[i])
+        predictions.append(result)
+    return predictions
+ 
+def getaccuracy(testset, predictions):
+    correct = 0
+    for i in range(len(testset)):
+        if testset[i][-1] == predictions[i]:
+            correct += 1
+    return (correct/float(len(testset))) * 100.0
+ 
+def main():
+    filename = 'naivedata.csv'
+    splitratio = 0.67
+    dataset = loadcsv(filename);
+     
+    trainingset, testset = splitdataset(dataset, splitratio)
+    print('Split {0} rows into train={1} and test={2} rows'.format(len(dataset), len(trainingset), len(testset)))
+    # prepare model
+    summaries = summarizebyclass(trainingset);    
+    # test model
+    predictions = getpredictions(summaries, testset) #find the predictions of test data with the training data
+    accuracy = getaccuracy(testset, predictions)
+    print('Accuracy of the classifier is : {0}%'.format(accuracy))
+main()
+
+Output:
+ 
+ 
+Practical 6
+Aim: Assuming a set of documents that need to be classified, use the naïve Bayesian Classifier model to perform this task. Built-in Java classes/API can be used to write the program. Calculate the accuracy, precision, and recall for your data set. CSV File:
+ 
+Code: 
+import pandas as pd
+msg=pd.read_csv('naivetext.csv',names=['message','label'])
+print('The dimensions of the dataset',msg.shape)
+msg['labelnum']=msg.label.map({'pos':1,'neg':0})
+X=msg.message
+y=msg.labelnum
+print(X)
+print(y)
+from sklearn.model_selection import train_test_split
+xtrain,xtest,ytrain,ytest=train_test_split(X,y)
+print(xtest.shape)
+print(xtrain.shape)
+print(ytest.shape)
+print(ytrain.shape) 
+ 
+from sklearn.feature_extraction.text import CountVectorizer 
+count_vect = CountVectorizer()
+xtrain_dtm = count_vect.fit_transform(xtrain)
+xtest_dtm=count_vect.transform(xtest)
+from sklearn.naive_bayes import MultinomialNB
+clf = MultinomialNB().fit(xtrain_dtm,ytrain) 
+predicted = clf.predict(xtest_dtm)
+from sklearn import metrics
+print('Accuracy metrics')
+print('Accuracy of the classifer is',metrics.accuracy_score(ytest,predicted))
+print('Confusion matrix')
+print(metrics.confusion_matrix(ytest,predicted))
+print('Recall and Precison ')
+print(metrics.recall_score(ytest,predicted))
+print(metrics.precision_score(ytest,predicted))
+
+
+
+
+
+
+
+
+Output:
+ 
+ 
+Practical 7
+Aim: Write a program to construct a Bayesian network considering medical data. Use this model to demonstrate the diagnosis of heart patients using standard Heart Disease Data Set. You can use Java/Python ML library classes/API
+CSV File:
+ 
+Code: 
+import numpy as np
+import pandas as pd
+import csv
+from pgmpy.estimators import MaximumLikelihoodEstimator
+from pgmpy.models import BayesianModel
+from pgmpy.inference import VariableElimination
+#read Cleveland Heart Disease data
+heartDisease = pd.read_csv('heart.csv')
+heartDisease = heartDisease.replace('?',np.nan)
+#display the data
+print('Sample instances from the dataset are given below')
+print(heartDisease.head())
+#display the Attributes names and datatyes
+print('\n Attributes and datatypes')
+print(heartDisease.dtypes)
+#Creat Model- Bayesian Network
+model = BayesianModel([('age','heartdisease'),('sex','heartdisease'),('exang','heartdisease'),('cp','heartdisease'),
+               ('heartdisease','restecg'),('heartdisease','chol')])
+#Learning CPDs using Maximum Likelihood Estimators
+print('\n Learning CPD using Maximum likelihood estimators')
+model.fit(heartDisease,estimator=MaximumLikelihoodEstimator)
+# Inferencing with Bayesian Network
+print('\n Inferencing with Bayesian Network:')
+HeartDiseasetest_infer = VariableElimination(model)
+#computing the Probability of HeartDisease given restecg
+print('\n 1.Probability of HeartDisease given evidence=restecg :1')
+q1=HeartDiseasetest_infer.query(variables=['heartdisease'],evidence={'restecg':1})
+print(q1)
+#computing the Probability of HeartDisease given cp
+print('\n 2.Probability of HeartDisease given evidence= cp:2 ')
+q2=HeartDiseasetest_infer.query(variables=['heartdisease'],evidence={'cp':2})
+print(q2)
+
+
+ 
+Output:
+ 
+  
+Practical 8
+Aim: Apply EM algorithm to cluster a set of data stored in a .CSV file. Use the same data set for clustering using k-Means algorithm. Compare the results of these two algorithms and comment on the quality of clustering. You can add Java/Python ML library classes/API in the program.
+Code: 
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.cluster import KMeans
+import sklearn.metrics as sm
+import pandas as pd
+import numpy as np
+
+iris = datasets.load_iris()
+
+X = pd.DataFrame(iris.data)
+X.columns = ['Sepal_Length','Sepal_Width','Petal_Length','Petal_Width']
+
+y = pd.DataFrame(iris.target)
+y.columns = ['Targets']
+
+model = KMeans(n_clusters=3)
+model.fit(X)
+
+plt.figure(figsize=(14,7))
+
+colormap = np.array(['red', 'lime', 'black'])
+
+# Plot the Original Classifications
+plt.subplot(1, 2, 1)
+plt.scatter(X.Petal_Length, X.Petal_Width, c=colormap[y.Targets], s=40)
+plt.title('Real Classification')
+plt.xlabel('Petal Length')
+plt.ylabel('Petal Width')
+
+# Plot the Models Classifications
+plt.subplot(1, 2, 2)
+plt.scatter(X.Petal_Length, X.Petal_Width, c=colormap[model.labels_], s=40)
+plt.title('K Mean Classification')
+plt.xlabel('Petal Length')
+plt.ylabel('Petal Width')
+print('The accuracy score of K-Mean: ',sm.accuracy_score(y, model.labels_))
+print('The Confusion matrixof K-Mean: ',sm.confusion_matrix(y, model.labels_))
+
+from sklearn import preprocessing
+scaler = preprocessing.StandardScaler()
+scaler.fit(X)
+xsa = scaler.transform(X)
+xs = pd.DataFrame(xsa, columns = X.columns)
+#xs.sample(5)
+
+from sklearn.mixture import GaussianMixture
+gmm = GaussianMixture(n_components=3)
+gmm.fit(xs)
+
+y_gmm = gmm.predict(xs)
+#y_cluster_gmm
+
+plt.subplot(2, 2, 3)
+plt.scatter(X.Petal_Length, X.Petal_Width, c=colormap[y_gmm], s=40)
+plt.title('GMM Classification')
+plt.xlabel('Petal Length')
+plt.ylabel('Petal Width')
+
+print('The accuracy score of EM: ',sm.accuracy_score(y, y_gmm))
+print('The Confusion matrix of EM: ',sm.confusion_matrix(y, y_gmm))
+
+Output:
+
+ 
+ 
+Practical 9
+Aim: Write a program to implement k-Nearest Neighbour algorithm to classify the iris data set. Print both correct and wrong predictions. Java/Python ML library classes can be used for this problem.CSV File:
+Code: 
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
+import pandas as pd
+from sklearn import datasets
+X = iris.data
+y = iris.target
+# dataset=pd.read_csv("iris.csv") 
+X_train,X_test,y_train,y_test=train_test_split(X,y,random_state=0,test_size=0.25)
+ 
+classifier=KNeighborsClassifier(n_neighbors=8,p=3,metric='euclidean')
+classifier.fit(X_train,y_train)
+ 
+#predict the test resuts
+y_pred=classifier.predict(X_test)
+ 
+cm=confusion_matrix(y_test,y_pred)
+print('Confusion matrix is as follows\n',cm)
+print('Accuracy Metrics')
+print(classification_report(y_test,y_pred)) 
+print(" correct predicition",accuracy_score(y_test,y_pred))
+print(" worng predicition",(1-accuracy_score(y_test,y_pred)))
+
+
+Output:
+ 
+ 
+Practical 10
+Aim: Implement the non-parametric Locally Weighted Regression algorithm in order to fit data points. Select appropriate data set for your experiment and draw graphs.
+Code: 
+import numpy as np
+from bokeh.plotting import figure, show, output_notebook
+from bokeh.layouts import gridplot
+from bokeh.io import push_notebook
+def local_regression(x0, X, Y, tau):# add bias term
+    x0 = np.r_[1, x0] # Add one to avoid the loss ininformation
+    X = np.c_[np.ones(len(X)), X]
+    # fit model: normal equations with kernel
+    xw = X.T * radial_kernel(x0, X, tau) # XTranspose * W
+    beta = np.linalg.pinv(xw @ X) @ xw @ Y #@ Matrix Multiplication or Dot Product
+    # predict value
+    return x0 @ beta # @ Matrix Multiplication or Dot Product for prediction
+def radial_kernel(x0, X, tau):
+    return np.exp(np.sum((X - x0) ** 2, axis=1) / (-2 * tau *tau))
+# Weight or Radial Kernal Bias Function
+n = 1000
+# generate dataset
+X = np.linspace(-3, 3, num=n)
+print("The Data Set ( 10 Samples) X :\n",X[1:10])
+Y = np.log(np.abs(X ** 2 - 1) + .5)
+print("The Fitting Curve Data Set (10 Samples) Y:\n",Y[1:10])
+# jitter X
+X += np.random.normal(scale=.1, size=n)
+print("Normalised (10 Samples) X :\n",X[1:10])
+domain = np.linspace(-3, 3, num=300)
+print(" Xo Domain Space(10 Samples) :\n",domain[1:10])
+def plot_lwr(tau):
+    # prediction through regression
+    prediction = [local_regression(x0, X, Y, tau) for x0 in domain]
+    plot = figure(plot_width=400, plot_height=400)
+    plot.title.text='tau=%g' % tau
+    plot.scatter(X, Y, alpha=.3)
+    plot.line(domain, prediction, line_width=2, color='red')
+    return plot
+show(gridplot([
+[plot_lwr(10.), plot_lwr(1.)],
+[plot_lwr(0.1), plot_lwr(0.01)]]))
+Output:
+
+ 
+ 
+

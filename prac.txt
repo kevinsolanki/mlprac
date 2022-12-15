@@ -1,7 +1,13 @@
 Practical 1
 Aim: Implement and demonstrate the FIND-S algorithm for finding the most specific hypothesis based on a given set of training data samples. Read the training data from a .CSV file.
 CSV File:
- 
+    sky , airtemp, humidity , wind, water, forcast , enjoysport
+    sunny , warm, normal, strong, warm, same ,yes
+    sunny , warm, high, strong, warm, same , yes
+    rainy , cold , high, strong, warm, change, no
+    sunny , warm, high, strong, cool, change , yes
+
+
 Code: 
 import csv
 a = []
@@ -40,7 +46,13 @@ Output:
 Practical 2
 Aim: For a given set of training data examples stored in a .CSV file, implement and demonstrate the Candidate-Elimination algorithm to output a description of the set of all hypotheses consistent with the training examples.
 CSV File:
- 
+    sky, ai rTemp, humidity , wind, water, forecast, enjoySport
+    Sunny, Warm, Normal, Strong, Warm, Same, Yes
+    Sunny, Warm, High, Strong, Warm, Same, Yes
+    Rainy, Cold, High, Strong, Warm, Change, No
+    Sunny, Warm, High, Strong, Cool,Change,Yes
+
+
 Code: 
 import numpy as np
 import pandas as pd
@@ -120,7 +132,23 @@ Output:
 Practical 3
 Aim: Write a program to demonstrate the working of the decision tree based ID3 algorithm. Use an appropriate data set for building the decision tree and apply this knowledge to classify a new sample.
 CSV File:
- 
+    Outlook, Temperature, Humidity, Windy , PT
+    Sunny, Hot, High, Weak, No
+    Sunny, Hot, High, Strong, No
+    overcast,Hot,High,Weak,Yes
+    Rainy,Mi1d,High,Weak,Yes
+    Rainy, Cool, Normal,Weak, Yes
+    Rainy, Cool , Normal, Strong, No
+    Overcast , Cool , Normal , Strong, Yes
+    Sunny,Mi1d,High,Weak,No
+    Sunny, Cool, Normal, Weak, Yes
+    Rainy, Mild, Normal, Weak, Yes
+    Sunny, Mild, Normal, Strong, Yes
+    Overcast,Mi1d, High, Strong, Yes
+    overcast,Hot,Norma1,weak,Yes
+    Rainy, Mild, High, Strong, No
+
+
 Code: 
 import pandas as pd
 from collections import Counter
@@ -243,7 +271,9 @@ Output:
 Practical 5
 Aim: Write a program to implement the naïve Bayesian classifier for a sample training data set stored as a .CSV file. Compute the accuracy of the classifier, considering few test data sets.
 CSV File:
- 
+    
+
+    
 Code: 
 import csv
 import random
@@ -358,8 +388,28 @@ Output:
  
  
 Practical 6
-Aim: Assuming a set of documents that need to be classified, use the naïve Bayesian Classifier model to perform this task. Built-in Java classes/API can be used to write the program. Calculate the accuracy, precision, and recall for your data set. CSV File:
- 
+Aim: Assuming a set of documents that need to be classified, use the naïve Bayesian Classifier model to perform this task. Built-in Java classes/API can be used to write the program. Calculate the accuracy, precision, and recall for your data set. 
+CSV File:
+    I love this sandwich, pos
+    This is an amazing place,pos
+    I feel very good about these beers,pos
+    This is my best work, pos
+    What an awesome view, pos
+    I do not like this restaurant, neg
+    I am tired of this stuff,neg
+    I can't deal with this, neg
+    He is my sworn enemy,neg
+    My boss is horrible, neg
+    This is an awesome place,pos
+    I do not like the taste of this juice,neg
+    I love to dance, pos
+    I am sick and tired of this place, neg
+    What a great holiday, pos
+    That is a bad locality to stay,neg
+    We will have good fun tomorrow, pos
+    I went to my enemy's house today,neg
+
+
 Code: 
 import pandas as pd
 msg=pd.read_csv('naivetext.csv',names=['message','label'])
